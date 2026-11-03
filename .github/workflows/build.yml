@@ -40,6 +40,7 @@ jobs:
         run: |
           cd ws
           export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb
+          export GNUARMEMB_TOOLCHAIN_PATH=/usr  # apt gcc-arm-none-eabi layout
           west build -p always -b promicro_nrf52840/nrf52840/uf2 "$GITHUB_WORKSPACE/app" -- \
             "-DBOARD_ROOT=$GITHUB_WORKSPACE/board-root" \
             "-DDTC_OVERLAY_FILE=$GITHUB_WORKSPACE/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \

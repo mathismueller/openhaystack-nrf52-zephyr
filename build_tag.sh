@@ -26,10 +26,14 @@ source "$WS/.venv/bin/activate"
 cd "$WS" # west finds the workspace (.west) via CWD
 
 export ZEPHYR_TOOLCHAIN_VARIANT="${ZEPHYR_TOOLCHAIN_VARIANT:-gnuarmemb}"
-# Apple-Silicon Homebrew layout; everywhere else (Linux, Intel Macs) the
-# toolchain resolves via PATH (distro package or Nordic toolchain manager).
-if [ -z "${GNUARMEMB_TOOLCHAIN_PATH:-}" ] && [ "$(uname -s)" = Darwin ] && [ -d /opt/homebrew ]; then
-  export GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
+# Zephyr's gnuarmemb requires GNUARMEMB_TOOLCHAIN_PATH (toolchain root).
+if [ -z "${GNUARMEMB_TOOLCHAIN_PATH:-}" ]; then
+  case "$(uname -s)" in
+    Darwin) [ -d /opt/homebrew ] && export GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew ;;
+    Linux) if command -v arm-none-eabi-gcc >/dev/null; then
+             export GNUARMEMB_TOOLCHAIN_PATH="$(dirname "$(dirname "$(command -v arm-none-eabi-gcc)")")"
+           fi ;;
+  esac
 fi
 if ! command -v arm-none-eabi-gcc >/dev/null && \
    [ ! -x "${GNUARMEMB_TOOLCHAIN_PATH:-/nonexistent}/bin/arm-none-eabi-gcc" ]; then
