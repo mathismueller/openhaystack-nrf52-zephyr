@@ -4,8 +4,8 @@
 // app/boards/arm/nice_nano/nice_nano.dtsi) for use with NCS 2.6.1 /
 // Zephyr 3.5. Changes vs upstream ZMK:
 // - Dropped `#include "arduino_pro_micro_pins.dtsi"`: the
-//   `arduino-pro-micro` connector binding only exists in ZMK, and the
-//   802.15.4 sniffer does not need the Pro Micro pin mapping.
+//   `arduino-pro-micro` connector binding only exists in ZMK, and this
+//   tag does not need the Pro Micro pin mapping.
 // - Single blue LED (P0.15) is exposed as four DK LED nodes so the
 //   Nordic dk_buttons_and_leds library (DK_LED1 heartbeat, DK_LED4
 //   packet activity) drives the one available LED.

@@ -7,8 +7,8 @@ Port of `koenvervloesem/openhaystack-zephyr` (MIT) to current NCS conventions.
 Advertises the same Apple `4C 00 / 12 19` payload; no Apple ID is needed to
 verify the advertisement itself.
 
-Reuses the proven bench setup from `rtl8196e-gateway/4-Bench-Sniffer-nRF52840`:
-same board (`nice_nano_v2`), same workspace pattern, same toolchain.
+Built for the nRF52840 ProMicro (nice!nano v2 footprint, LiPo) with the
+standard out-of-tree NCS workspace pattern (`~/nrf-ws`, NCS v3.4.1 LTS).
 
 ## Layout (Zephyr example-application + thin committable layer)
 
@@ -19,7 +19,7 @@ same board (`nice_nano_v2`), same workspace pattern, same toolchain.
 * `board-root/` — vendored `nice_nano` board def (BOARD_ROOT, from ZMK history,
   de-ZMK-ified; NCS v2.6.1 has no `nice_nano_v2` upstream)
 * `modules/openhaystack/` — reusable Zephyr module (`module.yml` + `Kconfig`)
-* `build_tag.sh` — west wrapper using `~/nrf-sniffer-ws`
+* `build_tag.sh` — west wrapper using `~/nrf-ws` (override with `NCS_WS`)
 * `firmware/` — committed `.uf2` artifacts (drag-drop to NICENANO)
 * `openhaypatch.sh` — patch `OFFLINEFINDINGPUBLICKEYHERE!` in the `.bin` with your key
 
@@ -69,7 +69,7 @@ Patch your key (28 bytes raw, base64):
 ADV_KEY_BASE64=YOUR_KEY ./openhaypatch.sh build/zephyr/zephyr.bin tag.bin
 ```
 
-## Workspace setup (one time, generic `~/nrf-ws` shared with the sniffer)
+## Workspace setup (one time, generic `~/nrf-ws`)
 
 ```sh
 west init -m https://github.com/nrfconnect/sdk-nrf --mr v3.4.1 ~/nrf-ws
@@ -88,9 +88,8 @@ export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
 * Fetching location reports still goes through Apple's servers and is
   throttled/limited (see upstream issues). Use a throwaway Apple ID.
 * LiPo charging is hardware (on-board charger); FW only sleeps between 5 s ads.
-  Clones may lack the 32 kHz crystal → LFCLK=RC is set in
-  `app/boards/nice_nano_v2.conf` (same as sniffer). Verify your variant's VBAT
-  divider pin before enabling the ADC snippet in the overlay.
+  Clones may lack the 32 kHz crystal → LFCLK=RC is set in the board confs.
+  Verify your variant's VBAT divider pin before enabling the ADC snippet in the overlay.
 
 ## License
 
