@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: MIT
 # Patch the default key OFFLINEFINDINGPUBLICKEYHERE! in the built .bin with your own 28-byte key.
 # Usage: ADV_KEY_BASE64=<base64> ./openhaypatch.sh build/zephyr/zephyr.bin out.bin
 set -e

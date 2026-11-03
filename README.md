@@ -26,16 +26,42 @@ same board (`nice_nano_v2`), same workspace pattern, same toolchain.
 ## Build / flash (USB only, no SWD)
 
 ```sh
-./build_tag.sh              # BOARD=nice_nano_v2 (default), uses ~/nrf-ws
-# Output: firmware/haystack-tag-nice_nano_v2.uf2
+./build_tag.sh              # BOARD=promicro_nrf52840/nrf52840/uf2 (default), uses ~/nrf-ws
+# Output: firmware/haystack-tag-promicro_nrf52840_nrf52840_uf2.uf2
+# Legacy: NCS_WS=~/nrf-sniffer-ws BOARD=nice_nano_v2 ./build_tag.sh
 ```
 
 1. Double-press RST → `NICENANO` drive mounts.
 2. Drag-drop the `.uf2` → board auto-resets.
 
-Debug logs over USB CDC:
+### Reflash without the RST button
+
+The release firmware enables its USB CDC port only while VBUS is present
+(zero battery cost — on LiPo the USB block never powers up), purely as a
+flashing door into the Adafruit UF2 bootloader:
+
 ```sh
-west build -b nice_nano_v2 app -- -DOVERLAY_CONFIG=debug-usb-uart.conf
+printf 'UF2!\n' > /dev/cu.usbmodem*   # back to NICENANO within ~5 s
+```
+
+Debug builds (shell + logs on the same CDC port) additionally offer:
+
+* `uf2` shell command → instant reboot into flashing mode
+* 1200-baud touch (`stty -f /dev/cu.usbmodem* 1200`, port held open ~15 s).
+  macOS delivers line-coding changes slowly on an idle bus; the `UF2!`
+  line is the fast path.
+
+Debug build with USB CDC logs + shell (same flags as `build_tag.sh`, plus
+the overlay; output is a `.uf2` flashed the same way):
+
+```sh
+source ~/nrf-ws/.venv/bin/activate
+export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
+west build -b promicro_nrf52840/nrf52840/uf2 app -d ~/nrf-ws/build-tag-debug -- \
+  "-DBOARD_ROOT=$PWD/board-root" \
+  "-DDTC_OVERLAY_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
+  "-DEXTRA_CONF_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.conf;$PWD/app/debug-usb-uart.conf" \
+  -DCONFIG_BUILD_OUTPUT_UF2=y
 ```
 
 Patch your key (28 bytes raw, base64):
@@ -65,3 +91,17 @@ export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
   Clones may lack the 32 kHz crystal → LFCLK=RC is set in
   `app/boards/nice_nano_v2.conf` (same as sniffer). Verify your variant's VBAT
   divider pin before enabling the ADC snippet in the overlay.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Upstream inspiration:
+[koenvervloesem/openhaystack-zephyr](https://github.com/koenvervloesem/openhaystack-zephyr)
+(MIT), Apple Find My format via the OpenHaystack project.
+
+## AI disclosure
+
+This project was developed with the assistance of an AI coding agent
+(OpenCode), including debugging, refactoring, and documentation. All
+firmware behavior was verified on hardware: BLE advertisements checked
+over the air (nRF Connect, custom BLE scan), USB flashing and logging
+tested on the board.

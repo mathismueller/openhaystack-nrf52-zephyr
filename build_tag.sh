@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
 # Build the Haystack tag (OpenHaystack on nRF52840 Pro Micro / nice!nano v2).
 # Uses the generic out-of-tree NCS workspace at ~/nrf-ws (see README.md).
 # Board files: upstream promicro_nrf52840 (NCS >= v3.x) or vendored nice_nano
