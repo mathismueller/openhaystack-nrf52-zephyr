@@ -13,9 +13,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # App repo lands at $GITHUB_WORKSPACE; the NCS workspace mirrors the
+      # README flow (west init -m ... + out-of-tree west build), not -l.
       - uses: actions/checkout@v4
-        with:
-          path: openhaystack-nrf52-zephyr
       - name: Install system deps + ARM toolchain
         run: |
           sudo apt update
@@ -27,7 +27,7 @@ jobs:
         run: pip install --break-system-packages west
       - name: West init + update (pinned sdk-nrf, see west.yml)
         run: |
-          west init -l openhaystack-nrf52-zephyr ws
+          west init -m https://github.com/nrfconnect/sdk-nrf --mr v3.4.1 ws
           cd ws
           west update --narrow -o=--depth=1
           west zephyr-export
@@ -40,10 +40,10 @@ jobs:
         run: |
           cd ws
           export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb
-          west build -p always -b promicro_nrf52840/nrf52840/uf2 openhaystack-nrf52-zephyr/app -- \
-            "-DBOARD_ROOT=$PWD/openhaystack-nrf52-zephyr/board-root" \
-            "-DDTC_OVERLAY_FILE=$PWD/openhaystack-nrf52-zephyr/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
-            "-DEXTRA_CONF_FILE=$PWD/openhaystack-nrf52-zephyr/app/boards/promicro_nrf52840_nrf52840_uf2.conf" \
+          west build -p always -b promicro_nrf52840/nrf52840/uf2 "$GITHUB_WORKSPACE/app" -- \
+            "-DBOARD_ROOT=$GITHUB_WORKSPACE/board-root" \
+            "-DDTC_OVERLAY_FILE=$GITHUB_WORKSPACE/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
+            "-DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/app/boards/promicro_nrf52840_nrf52840_uf2.conf" \
             -DCONFIG_BUILD_OUTPUT_UF2=y
       - name: Twister (ztest on native_sim, needs Zephyr SDK)
         run: |
