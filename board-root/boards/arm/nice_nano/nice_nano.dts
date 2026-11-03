@@ -1,0 +1,12 @@
+/*
+ * Vendored from ZMK (commit c06fa48^, pre-HWMv2 layout
+ * app/boards/arm/nice_nano/nice_nano.dts). ZMK battery-management nodes
+ * (zmk,ext-power-generic / zmk,battery-voltage-divider) were removed:
+ * they require out-of-tree ZMK devicetree bindings unavailable in NCS.
+ */
+
+/dts-v1/;
+#include "nice_nano.dtsi"
+
+/ {
+};

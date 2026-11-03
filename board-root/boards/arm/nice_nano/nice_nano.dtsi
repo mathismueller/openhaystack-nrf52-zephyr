@@ -1,0 +1,137 @@
+// SPDX-License-Identifier: MIT
+
+// Vendored from ZMK (commit c06fa48^, pre-HWMv2 layout
+// app/boards/arm/nice_nano/nice_nano.dtsi) for use with NCS 2.6.1 /
+// Zephyr 3.5. Changes vs upstream ZMK:
+// - Dropped `#include "arduino_pro_micro_pins.dtsi"`: the
+//   `arduino-pro-micro` connector binding only exists in ZMK, and the
+//   802.15.4 sniffer does not need the Pro Micro pin mapping.
+// - Single blue LED (P0.15) is exposed as four DK LED nodes so the
+//   Nordic dk_buttons_and_leds library (DK_LED1 heartbeat, DK_LED4
+//   packet activity) drives the one available LED.
+
+#include <nordic/nrf52840_qiaa.dtsi>
+#include "nice_nano-pinctrl.dtsi"
+
+/ {
+	model = "nice!nano";
+	compatible = "nice,nano";
+
+	chosen {
+		zephyr,code-partition = &code_partition;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led0: led_0 {
+			gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+			label = "Blue LED";
+		};
+		led1: led_1 {
+			gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+			label = "Blue LED (DK_LED2)";
+		};
+		led2: led_2 {
+			gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+			label = "Blue LED (DK_LED3)";
+		};
+		led3: led_3 {
+			gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+			label = "Blue LED (DK_LED4)";
+		};
+	};
+
+	aliases {
+		led0 = &led0;
+		led1 = &led1;
+		led2 = &led2;
+		led3 = &led3;
+	};
+};
+
+&adc {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&i2c0 {
+	compatible = "nordic,nrf-twi";
+	pinctrl-0 = <&i2c0_default>;
+	pinctrl-1 = <&i2c0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&spi1 {
+	compatible = "nordic,nrf-spim";
+	pinctrl-0 = <&spi1_default>;
+	pinctrl-1 = <&spi1_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+zephyr_udc0: &usbd {
+	status = "okay";
+
+	cdc_acm_uart: cdc_acm_uart {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&flash0 {
+	/*
+	 * Partition layout matches the Adafruit nRF52 UF2 bootloader
+	 * (Double-reset "NICENANO" MSC): SoftDevice/MBR region kept at
+	 * 0x0-0x26000, application linked at 0x26000 via
+	 * zephyr,code-partition + CONFIG_USE_DT_CODE_PARTITION, bootloader
+	 * reserved at the top of flash.
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		sd_partition: partition@0 {
+			reg = <0x00000000 0x00026000>;
+		};
+		code_partition: partition@26000 {
+			reg = <0x00026000 0x000c6000>;
+		};
+
+		/*
+		 * The flash starting at 0x000ec000 and ending at
+		 * 0x000f3fff is reserved for use by the application.
+		 */
+
+		/*
+		 * Storage partition will be used by FCB/LittleFS/NVS
+		 * if enabled.
+		 */
+		storage_partition: partition@ec000 {
+			reg = <0x000ec000 0x00008000>;
+		};
+
+		boot_partition: partition@f4000 {
+			reg = <0x000f4000 0x0000c000>;
+		};
+	};
+};

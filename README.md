@@ -1,44 +1,56 @@
 # openhaystack-nrf52-zephyr
 
-OpenHaystack BLE tag on nRF52840 ProMicro (nice!nano v2 compatible) with LiPo,
+OpenHaystack BLE tag on nRF52840 ProMicro (nice!nano v2 footprint, LiPo),
 built on the official **nRF Connect SDK** (Zephyr + `sdk-nrf`, pinned in `west.yml`).
 
 Port of `koenvervloesem/openhaystack-zephyr` (MIT) to current NCS conventions.
 Advertises the same Apple `4C 00 / 12 19` payload; no Apple ID is needed to
 verify the advertisement itself.
 
-## Layout (Zephyr example-application)
+Reuses the proven bench setup from `rtl8196e-gateway/4-Bench-Sniffer-nRF52840`:
+same board (`nice_nano_v2`), same workspace pattern, same toolchain.
 
-* `west.yml` — west manifest, pins `sdk-nrf` (=> Zephyr) by hash, e.g. `v2.9.0`
-* `app/` — the firmware (`CMakeLists.txt`, `prj.conf`, `src/main.c`)
-* `app/boards/` — board overlays (NOT a custom board; uses upstream `nice_nano_v2`)
+## Layout (Zephyr example-application + thin committable layer)
+
+* `west.yml` — pins `sdk-nrf @ v2.6.1` (matches `~/nrf-sniffer-ws` verified build).
+  One manifest per workspace; heavy checkout lives **outside** this repo.
+* `app/` — firmware (`CMakeLists.txt`, `prj.conf`, `src/main.c`)
+* `app/boards/` — overlays (LFCLK=RC for XTAL-less clones, UF2 output)
+* `board-root/` — vendored `nice_nano` board def (BOARD_ROOT, from ZMK history,
+  de-ZMK-ified; NCS v2.6.1 has no `nice_nano_v2` upstream)
 * `modules/openhaystack/` — reusable Zephyr module (`module.yml` + `Kconfig`)
+* `build_tag.sh` — west wrapper using `~/nrf-sniffer-ws`
+* `firmware/` — committed `.uf2` artifacts (drag-drop to NICENANO)
 * `openhaypatch.sh` — patch `OFFLINEFINDINGPUBLICKEYHERE!` in the `.bin` with your key
 
-## West workspace
+## Build / flash (USB only, no SWD)
 
 ```sh
-# from the parent of this repo:
-west init -m openhaystack-nrf52-zephyr --mr main workspace
-cd workspace && west update
+./build_tag.sh              # BOARD=nice_nano_v2 (default)
+# Output: firmware/biketag-nice_nano_v2.uf2
 ```
 
-Needs `nrfutil` toolchain (`nrfutil toolchain-manager install`). Pinned SDK =
-reproducible builds; no git submodules for the SDK (see `west.yml`).
+1. Double-press RST → `NICENANO` drive mounts.
+2. Drag-drop the `.uf2` → board auto-resets.
 
-## Build / flash (nice!nano v2, UF2)
-
+Debug logs over USB CDC:
 ```sh
-cd workspace/openhaystack-nrf52-zephyr
-west build -p auto -b nice_nano_v2 -s app
-# UF2 at build/zephyr/zephyr.uf2 — double-tap reset, drag & drop
-west build -b nice_nano_v2 -s app -- -DOVERLAY_CONFIG=debug-usb-uart.conf  # USB logs
+west build -b nice_nano_v2 app -- -DOVERLAY_CONFIG=debug-usb-uart.conf
 ```
 
 Patch your key (28 bytes raw, base64):
-
 ```sh
 ADV_KEY_BASE64=YOUR_KEY ./openhaypatch.sh build/zephyr/zephyr.bin tag.bin
+```
+
+## Workspace setup (one time, already done for the sniffer)
+
+```sh
+west init -m https://github.com/nrfconnect/sdk-nrf --mr v2.6.1 ~/nrf-sniffer-ws
+cd ~/nrf-sniffer-ws && west update
+uv venv --python 3.12 ~/nrf-sniffer-ws/.venv
+uv pip install --python ~/nrf-sniffer-ws/.venv/bin/python west -r zephyr/scripts/requirements.txt -r nrf/scripts/requirements.txt -r bootloader/mcuboot/scripts/requirements.txt
+export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
 ```
 
 ## Notes
@@ -47,5 +59,6 @@ ADV_KEY_BASE64=YOUR_KEY ./openhaypatch.sh build/zephyr/zephyr.bin tag.bin
 * Fetching location reports still goes through Apple's servers and is
   throttled/limited (see upstream issues). Use a throwaway Apple ID.
 * LiPo charging is hardware (on-board charger); FW only sleeps between 2 s ads.
-  Verify your variant's VBAT divider pin before enabling the ADC snippet in
-  `app/boards/nice_nano_v2.overlay`.
+  Clones may lack the 32 kHz crystal → LFCLK=RC is set in
+  `app/boards/nice_nano_v2.conf` (same as sniffer). Verify your variant's VBAT
+  divider pin before enabling the ADC snippet in the overlay.

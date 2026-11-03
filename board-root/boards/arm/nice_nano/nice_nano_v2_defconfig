@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: MIT
+
+# Vendored from ZMK (commit c06fa48^). CONFIG_FLASH/NVS/SETTINGS and
+# CONFIG_ZMK_* removed: not needed by the sniffer (no settings/NVS) and
+# the ZMK symbols do not exist in NCS. CONFIG_BUILD_OUTPUT_UF2 kept so
+# the build emits a zephyr.uf2 for the Adafruit UF2 bootloader.
+
+CONFIG_SOC_SERIES_NRF52X=y
+CONFIG_SOC_NRF52840_QIAA=y
+CONFIG_BOARD_NICE_NANO_V2=y
+
+# Enable MPU
+CONFIG_ARM_MPU=y
+
+# Use pinctrl
+CONFIG_PINCTRL=y
+
+# enable GPIO
+CONFIG_GPIO=y
+
+# Link the app at zephyr,code-partition (0x26000), leaving room for the
+# Adafruit UF2 bootloader + SoftDevice region below it.
+CONFIG_USE_DT_CODE_PARTITION=y
+CONFIG_BUILD_OUTPUT_UF2=y
