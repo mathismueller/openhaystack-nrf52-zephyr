@@ -16,30 +16,37 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: openhaystack-nrf52-zephyr
-      - name: Install west + nrfutil
+      - name: Install system deps + ARM toolchain
         run: |
-          pip install west
-          curl -sSLo nrfutil https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil
-          chmod +x nrfutil && sudo mv nrfutil /usr/local/bin/
-          nrfutil self-upgrade
-          nrfutil install toolchain-manager
-      - name: West update (pinned sdk-nrf, see west.yml)
+          sudo apt update
+          sudo apt install --no-install-recommends -y git cmake ninja-build gperf \
+            ccache dfu-util device-tree-compiler wget python3-dev python3-pip \
+            xz-utils file make gcc gcc-arm-none-eabi
+          arm-none-eabi-gcc --version
+      - name: Install west
+        run: pip install --break-system-packages west
+      - name: West init + update (pinned sdk-nrf, see west.yml)
         run: |
-          cd openhaystack-nrf52-zephyr
-          west init -l . .
+          west init -l openhaystack-nrf52-zephyr ws
+          cd ws
           west update --narrow -o=--depth=1
           west zephyr-export
+      - name: Zephyr python requirements
+        run: |
+          cd ws
+          pip install --break-system-packages -r zephyr/scripts/requirements.txt \
+            -r nrf/scripts/requirements.txt -r bootloader/mcuboot/scripts/requirements.txt
       - name: Build promicro_nrf52840 (UF2)
         run: |
-          cd openhaystack-nrf52-zephyr
+          cd ws
           export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb
-          west build -p always -b promicro_nrf52840/nrf52840/uf2 app -- \
-            "-DBOARD_ROOT=$PWD/board-root" \
-            "-DDTC_OVERLAY_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
-            "-DEXTRA_CONF_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.conf" \
+          west build -p always -b promicro_nrf52840/nrf52840/uf2 openhaystack-nrf52-zephyr/app -- \
+            "-DBOARD_ROOT=$PWD/openhaystack-nrf52-zephyr/board-root" \
+            "-DDTC_OVERLAY_FILE=$PWD/openhaystack-nrf52-zephyr/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
+            "-DEXTRA_CONF_FILE=$PWD/openhaystack-nrf52-zephyr/app/boards/promicro_nrf52840_nrf52840_uf2.conf" \
             -DCONFIG_BUILD_OUTPUT_UF2=y
       - name: Twister (ztest on native_sim, needs Zephyr SDK)
         run: |
-          cd openhaystack-nrf52-zephyr
-          west twister -T tests/openhaystack -p native_sim || \
+          cd ws
+          west twister -T openhaystack-nrf52-zephyr/tests/openhaystack -p native_sim || \
             echo "twister needs Zephyr SDK on runner; host-test above is the gate"
