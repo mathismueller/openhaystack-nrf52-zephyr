@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build the bike tag (OpenHaystack on nRF52840 Pro Micro / nice!nano v2).
+# Build the Haystack tag (OpenHaystack on nRF52840 Pro Micro / nice!nano v2).
 # Reuses the proven out-of-tree NCS workspace at ~/nrf-sniffer-ws (NCS v2.6.1,
 # gnuarmemb) and the vendored board-root from 4-Bench-Sniffer-nRF52840.
 # Usage: ./build_tag.sh [BOARD=nice_nano_v2]
@@ -27,7 +27,7 @@ west build -b "$BOARD" "$REPO_ROOT/app" -d "$WS/build-tag-$BOARD" -- \
   -DCONFIG_BUILD_OUTPUT_UF2=y
 
 OUT="$WS/build-tag-$BOARD/zephyr/zephyr.uf2"
-DEST="$REPO_ROOT/firmware/biketag-$BOARD.uf2"
+DEST="$REPO_ROOT/firmware/haystack-tag-$BOARD.uf2"
 mkdir -p "$REPO_ROOT/firmware"
 cp -v "$OUT" "$DEST"
 sha256sum "$DEST"

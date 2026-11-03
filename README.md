@@ -27,7 +27,7 @@ same board (`nice_nano_v2`), same workspace pattern, same toolchain.
 
 ```sh
 ./build_tag.sh              # BOARD=nice_nano_v2 (default)
-# Output: firmware/biketag-nice_nano_v2.uf2
+# Output: firmware/haystack-tag-nice_nano_v2.uf2
 ```
 
 1. Double-press RST → `NICENANO` drive mounts.

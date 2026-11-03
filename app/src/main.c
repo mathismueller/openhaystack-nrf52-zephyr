@@ -1,5 +1,5 @@
 /*
- * bike tag - OpenHaystack on nRF52840 (Zephyr / nRF Connect SDK)
+ * haystack tag - OpenHaystack on nRF52840 (Zephyr / nRF Connect SDK)
  * Ported from koenvervloesem/openhaystack-zephyr (MIT) + acalatrava/openhaystack-firmware
  *
  * SPDX-License-Identifier: MIT
@@ -14,7 +14,7 @@
 
 #include "openhaystack.h"
 
-LOG_MODULE_REGISTER(bike_tag, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(haystack_tag, LOG_LEVEL_INF);
 
 /* Don't make `const` so the key can be patched in the .bin (see openhaypatch.sh) */
 static char public_key[28] = "OFFLINEFINDINGPUBLICKEYHERE!";
@@ -29,7 +29,7 @@ int main(void)
 {
 	int err;
 
-	LOG_INF("Starting bike tag...");
+	LOG_INF("Starting haystack tag...");
 
 	of_set_manufacturer_data_from_key(of_manufacturer_data, public_key);
 	of_set_address_from_key(&device_address, public_key);
