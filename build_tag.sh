@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build the Haystack tag (OpenHaystack on nRF52840 Pro Micro / nice!nano v2).
-# Reuses the proven out-of-tree NCS workspace at ~/nrf-sniffer-ws (NCS v2.6.1,
-# gnuarmemb) and the vendored board-root from 4-Bench-Sniffer-nRF52840.
+# Uses the generic out-of-tree NCS workspace at ~/nrf-ws (see README.md)
+# and the vendored board-root (dropped once NCS ships promicro_nrf52840).
 # Usage: ./build_tag.sh [BOARD=nice_nano_v2]
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-WS="${NCS_WS:-$HOME/nrf-sniffer-ws}"
+WS="${NCS_WS:-$HOME/nrf-ws}"
 BOARD="${BOARD:-nice_nano_v2}"
 
 if [ ! -d "$WS" ]; then

@@ -8,7 +8,6 @@ manifest:
     - name: nrf
       remote: nordic
       repo-path: sdk-nrf
-      # Pinned to the verified sniffer build (NCS v2.6.1, Zephyr 3.5.99).
-      # Keep in sync with ~/nrf-sniffer-ws; one manifest per workspace.
-      revision: v2.6.1
+      # Generic workspace ~/nrf-ws, NCS LTS. Keep in sync with build_tag.sh.
+      revision: v3.4.1
       import: true

@@ -12,7 +12,7 @@ same board (`nice_nano_v2`), same workspace pattern, same toolchain.
 
 ## Layout (Zephyr example-application + thin committable layer)
 
-* `west.yml` — pins `sdk-nrf @ v2.6.1` (matches `~/nrf-sniffer-ws` verified build).
+* `west.yml` — pins `sdk-nrf @ v3.4.1` (NCS LTS). Keep in sync with `~/nrf-ws`.
   One manifest per workspace; heavy checkout lives **outside** this repo.
 * `app/` — firmware (`CMakeLists.txt`, `prj.conf`, `src/main.c`)
 * `app/boards/` — overlays (LFCLK=RC for XTAL-less clones, UF2 output)
@@ -26,7 +26,7 @@ same board (`nice_nano_v2`), same workspace pattern, same toolchain.
 ## Build / flash (USB only, no SWD)
 
 ```sh
-./build_tag.sh              # BOARD=nice_nano_v2 (default)
+./build_tag.sh              # BOARD=nice_nano_v2 (default), uses ~/nrf-ws
 # Output: firmware/haystack-tag-nice_nano_v2.uf2
 ```
 
@@ -43,13 +43,13 @@ Patch your key (28 bytes raw, base64):
 ADV_KEY_BASE64=YOUR_KEY ./openhaypatch.sh build/zephyr/zephyr.bin tag.bin
 ```
 
-## Workspace setup (one time, already done for the sniffer)
+## Workspace setup (one time, generic `~/nrf-ws` shared with the sniffer)
 
 ```sh
-west init -m https://github.com/nrfconnect/sdk-nrf --mr v2.6.1 ~/nrf-sniffer-ws
-cd ~/nrf-sniffer-ws && west update
-uv venv --python 3.12 ~/nrf-sniffer-ws/.venv
-uv pip install --python ~/nrf-sniffer-ws/.venv/bin/python west -r zephyr/scripts/requirements.txt -r nrf/scripts/requirements.txt -r bootloader/mcuboot/scripts/requirements.txt
+west init -m https://github.com/nrfconnect/sdk-nrf --mr v3.4.1 ~/nrf-ws
+cd ~/nrf-ws && west update
+uv venv --python 3.12 ~/nrf-ws/.venv
+uv pip install --python ~/nrf-ws/.venv/bin/python west -r zephyr/scripts/requirements.txt -r nrf/scripts/requirements.txt -r bootloader/mcuboot/scripts/requirements.txt
 export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
 ```
 
