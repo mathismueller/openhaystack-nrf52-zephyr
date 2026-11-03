@@ -1,0 +1,7 @@
+build/
+.west/
+# west workspace state (created by `west init`, not part of the manifest repo)
+zephyr-workspace/
+*.pyc
+__pycache__/
+.DS_Store

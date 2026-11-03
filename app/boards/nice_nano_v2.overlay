@@ -1,0 +1,23 @@
+/* ProMicro nRF52840 (nice!nano v2 compatible) board overlay.
+ *
+ * Upstream board `nice_nano_v2` already sets LFCLK to the external 32.768 kHz
+ * crystal, DCDC, and the UF2 bootloader layout. Keep this overlay minimal:
+ * only project-specific tweaks (aliases, ADC for LiPo, retract unused nodes).
+ */
+
+/* Example: battery voltage divider on your ProMicro variant.
+ * Uncomment and set the correct input once you verified the schematic.
+ * VBAT is usually divided by 2, full scale 3.6 V -> use adc gain 1/6, ref 0.6 V.
+ */
+/*
+&adc {
+	status = "okay";
+};
+
+vbatsense: vbatsense {
+	compatible = "voltage-divider";
+	io-channels = <&adc 7>;  // <-- verify AIN7/P0.31 on your board
+	output-ohms = <1000000>;
+	full-ohms = <2000000>;
+};
+*/
