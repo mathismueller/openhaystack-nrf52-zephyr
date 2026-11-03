@@ -5,3 +5,4 @@ zephyr-workspace/
 *.pyc
 __pycache__/
 .DS_Store
+tests/host/test_openhaystack
