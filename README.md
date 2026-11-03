@@ -55,6 +55,9 @@ export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
 
 ## Notes
 
+* Findability: scannable advertising (`ADV_SCAN_IND`) with `HaystackTag`
+  in the scan response — shows by name in nRF Connect / LightBlue on
+  Android and iOS. The Find My primary packet is byte-identical.
 * Fixed static key = trackable by anyone nearby. Rotate keys for real use.
 * Fetching location reports still goes through Apple's servers and is
   throttled/limited (see upstream issues). Use a throwaway Apple ID.

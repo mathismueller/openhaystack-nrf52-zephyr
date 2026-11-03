@@ -48,8 +48,20 @@ int main(void)
 	}
 	LOG_INF("Bluetooth initialized");
 
+	/* Find My uses only the primary (non-connectable) packet, which stays
+	 * byte-identical. Scannable mode + scan response carrying the local
+	 * name lets common scanner apps (nRF Connect, LightBlue) list the tag
+	 * by name; Apple uploaders ignore the scan response. */
+	of_adv_param.options |= BT_LE_ADV_OPT_SCANNABLE;
+
+	struct bt_data sd[] = {
+		BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+		BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME,
+			(sizeof(CONFIG_BT_DEVICE_NAME) - 1)),
+	};
+
 	err = bt_le_adv_start(&of_adv_param, of_advertising_data,
-			      ARRAY_SIZE(of_advertising_data), NULL, 0);
+			      ARRAY_SIZE(of_advertising_data), sd, ARRAY_SIZE(sd));
 	if (err) {
 		LOG_ERR("Advertising failed to start (err %d)", err);
 		return 0;
