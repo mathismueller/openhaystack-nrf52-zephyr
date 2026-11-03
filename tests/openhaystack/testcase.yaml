@@ -1,0 +1,8 @@
+sample:
+  name: openhaystack key encoding
+tests:
+  openhaystack.key_encoding:
+    tags: bluetooth openhaystack
+    platform_allow:
+      - native_sim
+    harness: ztest

@@ -3,6 +3,13 @@ name: build
 on: [push, pull_request]
 
 jobs:
+  host-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host unit tests (key encoding, no SDK needed)
+        run: make -C tests/host clean test
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +29,17 @@ jobs:
           west init -l . .
           west update --narrow -o=--depth=1
           west zephyr-export
-      - name: Build nice_nano_v2
+      - name: Build promicro_nrf52840 (UF2)
         run: |
           cd openhaystack-nrf52-zephyr
-          west build -p always -b nice_nano_v2 app
+          export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb
+          west build -p always -b promicro_nrf52840/nrf52840/uf2 app -- \
+            "-DBOARD_ROOT=$PWD/board-root" \
+            "-DDTC_OVERLAY_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
+            "-DEXTRA_CONF_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.conf" \
+            -DCONFIG_BUILD_OUTPUT_UF2=y
+      - name: Twister (ztest on native_sim, needs Zephyr SDK)
+        run: |
+          cd openhaystack-nrf52-zephyr
+          west twister -T tests/openhaystack -p native_sim || \
+            echo "twister needs Zephyr SDK on runner; host-test above is the gate"

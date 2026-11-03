@@ -37,7 +37,9 @@ struct bt_data of_advertising_data[] = {
 
 void of_set_address_from_key(bt_addr_le_t *address, char key[28])
 {
-	address->a.val[5] = key[0] | 0b11000000;
+	/* cast: plain char is unsigned on ARM but signed on x86 hosts;
+	 * bitwise ops must not depend on it (key bytes are arbitrary) */
+	address->a.val[5] = (uint8_t)key[0] | 0b11000000;
 	address->a.val[4] = key[1];
 	address->a.val[3] = key[2];
 	address->a.val[2] = key[3];
@@ -48,5 +50,5 @@ void of_set_address_from_key(bt_addr_le_t *address, char key[28])
 void of_set_manufacturer_data_from_key(uint8_t data[29], char key[28])
 {
 	memcpy(&data[5], &key[6], 22);
-	data[27] = key[0] >> 6;
+	data[27] = (uint8_t)key[0] >> 6;
 }
