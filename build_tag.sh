@@ -26,7 +26,16 @@ source "$WS/.venv/bin/activate"
 cd "$WS" # west finds the workspace (.west) via CWD
 
 export ZEPHYR_TOOLCHAIN_VARIANT="${ZEPHYR_TOOLCHAIN_VARIANT:-gnuarmemb}"
-export GNUARMEMB_TOOLCHAIN_PATH="${GNUARMEMB_TOOLCHAIN_PATH:-/opt/homebrew}"
+# Apple-Silicon Homebrew layout; everywhere else (Linux, Intel Macs) the
+# toolchain resolves via PATH (distro package or Nordic toolchain manager).
+if [ -z "${GNUARMEMB_TOOLCHAIN_PATH:-}" ] && [ "$(uname -s)" = Darwin ] && [ -d /opt/homebrew ]; then
+  export GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
+fi
+if ! command -v arm-none-eabi-gcc >/dev/null && \
+   [ ! -x "${GNUARMEMB_TOOLCHAIN_PATH:-/nonexistent}/bin/arm-none-eabi-gcc" ]; then
+  echo "error: arm-none-eabi-gcc not found (set GNUARMEMB_TOOLCHAIN_PATH or add it to PATH)" >&2
+  exit 1
+fi
 
 BUILD_DIR="$WS/build-tag-$STEM"
 west build -b "$BOARD" "$REPO_ROOT/app" -d "$BUILD_DIR" -- \
@@ -40,4 +49,8 @@ OUT="$BUILD_DIR/app/zephyr/zephyr.uf2"
 DEST="$REPO_ROOT/firmware/haystack-tag-$STEM.uf2"
 mkdir -p "$REPO_ROOT/firmware"
 cp -v "$OUT" "$DEST"
-sha256sum "$DEST"
+if command -v sha256sum >/dev/null; then
+  sha256sum "$DEST"
+else
+  shasum -a 256 "$DEST"  # stock macOS (no coreutils)
+fi

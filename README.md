@@ -41,13 +41,15 @@ The release firmware enables its USB CDC port only while VBUS is present
 flashing door into the Adafruit UF2 bootloader:
 
 ```sh
-printf 'UF2!\n' > /dev/cu.usbmodem*   # back to NICENANO within ~5 s
+printf 'UF2!\n' > /dev/cu.usbmodem*   # macOS; Linux: /dev/ttyACM0
+# back to NICENANO within ~5 s
 ```
 
 Debug builds (shell + logs on the same CDC port) additionally offer:
 
 * `uf2` shell command → instant reboot into flashing mode
-* 1200-baud touch (`stty -f /dev/cu.usbmodem* 1200`, port held open ~15 s).
+* 1200-baud touch (`stty -f /dev/cu.usbmodem* 1200` on macOS,
+  `stty -F /dev/ttyACM0 1200` on Linux, port held open ~15 s).
   macOS delivers line-coding changes slowly on an idle bus; the `UF2!`
   line is the fast path.
 
@@ -56,7 +58,9 @@ the overlay; output is a `.uf2` flashed the same way):
 
 ```sh
 source ~/nrf-ws/.venv/bin/activate
-export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
+export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb  # + GNUARMEMB_TOOLCHAIN_PATH only
+                                           # if arm-none-eabi-gcc is not on PATH
+                                           # (macOS Homebrew: /opt/homebrew)
 west build -b promicro_nrf52840/nrf52840/uf2 app -d ~/nrf-ws/build-tag-debug -- \
   "-DBOARD_ROOT=$PWD/board-root" \
   "-DDTC_OVERLAY_FILE=$PWD/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
@@ -71,12 +75,19 @@ ADV_KEY_BASE64=YOUR_KEY ./openhaypatch.sh build/zephyr/zephyr.bin tag.bin
 
 ## Workspace setup (one time, generic `~/nrf-ws`)
 
+Linux first: `sudo apt install --no-install-recommends git cmake ninja-build
+gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip
+xz-utils file make gcc` (Zephyr's documented Ubuntu set), plus an ARM
+toolchain — distro `gcc-arm-none-eabi` package or Nordic's toolchain
+manager — on `PATH`. macOS: Xcode CLT + Homebrew `cmake ninja dtc ccache`.
+
 ```sh
 west init -m https://github.com/nrfconnect/sdk-nrf --mr v3.4.1 ~/nrf-ws
 cd ~/nrf-ws && west update
 uv venv --python 3.12 ~/nrf-ws/.venv
 uv pip install --python ~/nrf-ws/.venv/bin/python west -r zephyr/scripts/requirements.txt -r nrf/scripts/requirements.txt -r bootloader/mcuboot/scripts/requirements.txt
-export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
+export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb  # + GNUARMEMB_TOOLCHAIN_PATH only
+                                           # if arm-none-eabi-gcc is not on PATH
 ```
 
 ## Notes
