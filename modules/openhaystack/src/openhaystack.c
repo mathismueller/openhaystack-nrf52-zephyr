@@ -5,14 +5,15 @@
 #include "openhaystack.h"
 #include <string.h>
 
-/* Advertising interval: Offline Finding spec wants ~2 s */
+/* Advertising interval: 5 s (Offline Finding spec wants 2 s; 5 s halves
+ * average radio energy at the cost of sparser finder pickups) */
 struct bt_le_adv_param of_adv_param = {
 	.id = 1,
 	.sid = 0,
 	.secondary_max_skip = 0,
 	.options = BT_LE_ADV_OPT_USE_IDENTITY,
-	.interval_min = 2 * BT_GAP_ADV_SLOW_INT_MIN,
-	.interval_max = 2 * BT_GAP_ADV_SLOW_INT_MIN,
+	.interval_min = 5 * BT_GAP_ADV_SLOW_INT_MIN,
+	.interval_max = 5 * BT_GAP_ADV_SLOW_INT_MIN,
 	.peer = NULL,
 };
 

@@ -58,7 +58,7 @@ export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb GNUARMEMB_TOOLCHAIN_PATH=/opt/homebrew
 * Fixed static key = trackable by anyone nearby. Rotate keys for real use.
 * Fetching location reports still goes through Apple's servers and is
   throttled/limited (see upstream issues). Use a throwaway Apple ID.
-* LiPo charging is hardware (on-board charger); FW only sleeps between 2 s ads.
+* LiPo charging is hardware (on-board charger); FW only sleeps between 5 s ads.
   Clones may lack the 32 kHz crystal → LFCLK=RC is set in
   `app/boards/nice_nano_v2.conf` (same as sniffer). Verify your variant's VBAT
   divider pin before enabling the ADC snippet in the overlay.

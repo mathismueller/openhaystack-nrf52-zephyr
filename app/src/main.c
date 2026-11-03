@@ -54,7 +54,7 @@ int main(void)
 		LOG_ERR("Advertising failed to start (err %d)", err);
 		return 0;
 	}
-	LOG_INF("Advertising started, interval ~2 s");
+	LOG_INF("Advertising started, interval ~5 s");
 
 	/* Advertiser runs in controller; park app thread in low power */
 	while (1) {
