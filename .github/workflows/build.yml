@@ -1,6 +1,17 @@
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore: ['**.md', 'LICENSE', 'firmware/**']
+  pull_request:
+    paths-ignore: ['**.md', 'LICENSE', 'firmware/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   host-test:
@@ -13,8 +24,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # App repo lands at $GITHUB_WORKSPACE; the NCS workspace mirrors the
-      # README flow (west init -m ... + out-of-tree west build), not -l.
       - uses: actions/checkout@v4
       - name: Install system deps + ARM toolchain
         run: |
@@ -23,31 +32,28 @@ jobs:
             ccache dfu-util device-tree-compiler wget python3-dev python3-pip \
             xz-utils file make gcc gcc-arm-none-eabi
           arm-none-eabi-gcc --version
-      - name: Install west
-        run: pip install --break-system-packages west
-      - name: West init + update (pinned sdk-nrf, see west.yml)
+      - name: Install uv + west
         run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: NCS workspace (pinned sdk-nrf, see west.yml)
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"  # GITHUB_PATH lands next step
+          uv tool install west
           west init -m https://github.com/nrfconnect/sdk-nrf --mr v3.4.1 ws
           cd ws
           west update --narrow -o=--depth=1
           west zephyr-export
-      - name: Zephyr python requirements
+      - name: Build via build_tag.sh (single source of truth)
         run: |
-          cd ws
-          pip install --break-system-packages -r zephyr/scripts/requirements.txt \
-            -r nrf/scripts/requirements.txt -r bootloader/mcuboot/scripts/requirements.txt
-      - name: Build promicro_nrf52840 (UF2)
-        run: |
-          cd ws
-          export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb
-          export GNUARMEMB_TOOLCHAIN_PATH=/usr  # apt gcc-arm-none-eabi layout
-          west build -p always -b promicro_nrf52840/nrf52840/uf2 "$GITHUB_WORKSPACE/app" -- \
-            "-DBOARD_ROOT=$GITHUB_WORKSPACE/board-root" \
-            "-DDTC_OVERLAY_FILE=$GITHUB_WORKSPACE/app/boards/promicro_nrf52840_nrf52840_uf2.overlay" \
-            "-DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/app/boards/promicro_nrf52840_nrf52840_uf2.conf" \
-            -DCONFIG_BUILD_OUTPUT_UF2=y
-      - name: Twister (ztest on native_sim, needs Zephyr SDK)
-        run: |
-          cd ws
-          west twister -T openhaystack-nrf52-zephyr/tests/openhaystack -p native_sim || \
-            echo "twister needs Zephyr SDK on runner; host-test above is the gate"
+          uv venv --python 3.12 "$GITHUB_WORKSPACE/ws/.venv"
+          uv pip install --python "$GITHUB_WORKSPACE/ws/.venv/bin/python" \
+            west -r "$GITHUB_WORKSPACE/ws/zephyr/scripts/requirements.txt" \
+            -r "$GITHUB_WORKSPACE/ws/nrf/scripts/requirements.txt" \
+            -r "$GITHUB_WORKSPACE/ws/bootloader/mcuboot/scripts/requirements.txt"
+          NCS_WS="$GITHUB_WORKSPACE/ws" ./build_tag.sh
+      - name: Upload freshly built UF2
+        uses: actions/upload-artifact@v4
+        with:
+          name: haystack-tag-uf2
+          path: firmware/haystack-tag-promicro_nrf52840_nrf52840_uf2.uf2
